@@ -5,85 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Magnétic Express</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #0b0b16; font-family: sans-serif; user-select: none; }
+        body { margin: 0; overflow: hidden; background: #d1d5db; font-family: sans-serif; user-select: none; }
         
         #speedometer {
-            position: absolute; top: 25px; left: 50%; transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.85); border: 2px solid rgba(0, 188, 212, 0.4);
-            padding: 12px 28px; border-radius: 14px; color: white; font-size: 24px; font-weight: bold;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5); backdrop-filter: blur(8px);
-            letter-spacing: 1px;
+            position: absolute; top: 20px; left: 20px;
+            background: #111827; border: 2px solid rgba(0, 188, 212, 0.4);
+            padding: 12px 20px; border-radius: 12px; color: white; font-size: 20px; font-weight: bold;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); text-align: center;
         }
 
-        #status-banner {
-            position: absolute; top: 90px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 188, 212, 0.2); border: 1px solid #00bcd4;
-            padding: 6px 16px; border-radius: 20px; color: #00bcd4; font-size: 13px; font-weight: bold;
-            text-transform: uppercase; letter-spacing: 1.5px;
+        #power-display {
+            position: absolute; top: 20px; left: 160px;
+            background: #111827; border: 2px solid rgba(0, 188, 212, 0.4);
+            padding: 12px 20px; border-radius: 12px; color: white; font-size: 14px; font-weight: bold;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); text-align: center;
         }
+        #power-val { color: #f97316; display: block; font-size: 16px; margin-top: 2px; }
+
+        .top-btn-group {
+            position: absolute; top: 20px; right: 20px; display: flex; gap: 10px;
+        }
+        .top-btn {
+            background: #f97316; border: none; color: white; padding: 12px 18px;
+            border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+        }
+        .top-btn:active { background: #c2410c; }
 
         #ui {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 92%; max-width: 480px; background: rgba(15, 23, 42, 0.9);
+            width: 92%; max-width: 520px; background: rgba(17, 24, 39, 0.92);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
-            padding: 16px; display: flex; flex-direction: column; gap: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+            padding: 16px; display: flex; gap: 12px; align-items: center; justify-content: space-between;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7); backdrop-filter: blur(10px);
         }
-
-        .controls-top { display: flex; gap: 10px; justify-content: center; }
-        
-        .top-btn {
-            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
-            color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer;
-        }
-        .top-btn:active { background: rgba(255, 255, 255, 0.2); }
-
-        .controls-bottom { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
 
         #btnBuzina {
-            background: #ff6d00; border: none; color: white; padding: 16px 20px;
-            border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(255, 109, 0, 0.4);
-            flex: 1;
+            background: #f97316; border: none; color: white; padding: 18px 22px;
+            border-radius: 14px; font-weight: bold; font-size: 15px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4); flex: 1;
         }
         #btnBuzina:active { background: #e65100; }
 
         .throttle-box {
-            background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px; padding: 8px 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1.2;
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px; padding: 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1.4;
         }
-        .throttle-label { font-size: 10px; color: #94a3b8; font-weight: bold; text-align: center; }
-        input[type=range] { width: 100%; accent-color: #00bcd4; cursor: pointer; }
+        .throttle-label { font-size: 10px; color: #94a3b8; font-weight: bold; text-align: center; letter-spacing: 0.5px; }
+        input[type=range] { width: 100%; accent-color: #f97316; cursor: pointer; height: 8px; }
 
         #btnFreio {
-            background: #f43f5e; border: none; color: white; padding: 16px 20px;
-            border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4);
-            flex: 1; text-align: center;
+            background: #ef4444; border: none; color: white; padding: 18px 22px;
+            border-radius: 14px; font-weight: bold; font-size: 15px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); flex: 1; text-align: center;
         }
-        #btnFreio:active { background: #e11d48; }
+        #btnFreio:active { background: #dc2626; }
     </style>
 </head>
 <body>
-    <div id="speedometer">0 km/h</div>
-    <div id="status-banner">Pronto para partir</div>
+    <div id="speedometer">0<br><span style="font-size: 11px; color: #94a3b8;">km/h</span></div>
+    <div id="power-display">POTÊNCIA:<span id="power-val">0%</span></div>
+
+    <div class="top-btn-group">
+        <button class="top-btn" id="btnCamera">Câmera</button>
+        <button class="top-btn" id="btnPortas">Portas</button>
+    </div>
 
     <div id="ui">
-        <div class="controls-top">
-            <button class="top-btn" id="btnCamera">Câmera</button>
-            <button class="top-btn" id="btnPortas">Portas: Fechadas</button>
+        <button id="btnBuzina">BUZINA</button>
+        <div class="throttle-box">
+            <span class="throttle-label">ACELERADOR / POTÊNCIA</span>
+            <input type="range" id="throttle" min="0" max="100" value="0">
         </div>
-        <div class="controls-bottom">
-            <button id="btnBuzina">BUZINA</button>
-            <div class="throttle-box">
-                <span class="throttle-label">ACELERADOR / POTÊNCIA</span>
-                <input type="range" id="throttle" min="0" max="100" value="0">
-            </div>
-            <button id="btnFreio">FREIO / STOP</button>
-        </div>
+        <button id="btnFreio">FREIO / STOP</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Configuração dos áudios limpos
         const somBuzina = new Audio('buzina.mp3');
         const somAndando = new Audio('andando.mp3');
         const somAceleracao = new Audio('aceleração.mp3');
@@ -93,81 +91,91 @@
         somAndando.loop = true;
         somParado.loop = true;
 
-        // Cena, Câmera e Renderizador
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0b132b);
-        scene.fog = new THREE.FogExp2(0x0b132b, 0.008);
+        scene.background = new THREE.Color(0xd1d5db);
+        scene.fog = new THREE.FogExp2(0xd1d5db, 0.012);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Iluminação
         const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
         scene.add(ambientLight);
         
-        const dirLight = new THREE.DirectionalLight(0x00ffff, 1.5);
-        dirLight.position.set(30, 50, 30);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        dirLight.position.set(20, 40, 20);
         scene.add(dirLight);
 
-        // Pista Magnética Estilizada
         class TrackCurve extends THREE.Curve {
             constructor() { super(); }
             getPoint(t, optionalTarget = new THREE.Vector3()) {
                 const tx = Math.sin(t * Math.PI * 2) * 50;
-                const ty = Math.sin(t * Math.PI * 4) * 3;
+                const ty = Math.sin(t * Math.PI * 4) * 2;
                 const tz = Math.cos(t * Math.PI * 2) * 50;
                 return optionalTarget.set(tx, ty, tz);
             }
         }
         const path = new TrackCurve();
-        const tubeGeometry = new THREE.TubeGeometry(path, 250, 1.2, 8, true);
-        const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x00ffff, metalness: 0.8, roughness: 0.2, emissive: 0x004466 });
-        const trackMesh = new THREE.Mesh(tubeGeometry, trackMaterial);
+        
+        const tunnelGeometry = new THREE.TubeGeometry(path, 300, 6.5, 16, true);
+        const tunnelMaterial = new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 0.9, side: THREE.BackSide });
+        const tunnelMesh = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
+        scene.add(tunnelMesh);
+
+        const trackGeometry = new THREE.TubeGeometry(path, 300, 1.2, 8, true);
+        const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x1f2937, metalness: 0.8, roughness: 0.2 });
+        const trackMesh = new THREE.Mesh(trackGeometry, trackMaterial);
+        trackMesh.position.y -= 4.5;
         scene.add(trackMesh);
 
-        // Modelo do Trem Detalhado (Locomotiva + Vagões Modernos)
         const trainGroup = new THREE.Group();
         
-        const locoGeo = new THREE.BoxGeometry(2.1, 2.1, 4.2);
-        const locoMat = new THREE.MeshStandardMaterial({ color: 0xff0055, metalness: 0.7, roughness: 0.2, emissive: 0x330011 });
+        const locoGeo = new THREE.BoxGeometry(2.2, 2.2, 4.5);
+        const locoMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.5, roughness: 0.3 });
         const locomotive = new THREE.Mesh(locoGeo, locoMat);
         trainGroup.add(locomotive);
 
+        const cabinGeo = new THREE.BoxGeometry(2.1, 1.0, 1.2);
+        const cabinMat = new THREE.MeshStandardMaterial({ color: 0x111827 });
+        const cabinWindow = new THREE.Mesh(cabinGeo, cabinMat);
+        cabinWindow.position.set(0, 0.2, 1.7);
+        trainGroup.add(cabinWindow);
+
         const wagons = [];
-        for (let i = 0; i < 3; i++) {
-            const wagonGeo = new THREE.BoxGeometry(2.0, 2.0, 3.8);
-            const wagonMat = new THREE.MeshStandardMaterial({ color: 0x00aaff, metalness: 0.7, roughness: 0.2 });
+        for (let i = 0; i < 4; i++) {
+            const wagonGeo = new THREE.BoxGeometry(2.1, 2.1, 4.0);
+            const wagonMat = new THREE.MeshStandardMaterial({ color: 0xf3f4f6, metalness: 0.5, roughness: 0.3 });
             const wagon = new THREE.Mesh(wagonGeo, wagonMat);
             trainGroup.add(wagon);
             wagons.push(wagon);
         }
         scene.add(trainGroup);
 
-        // Variáveis de Estado
         let trainProgress = 0;
         let speed = 0;
         let targetSpeed = 0;
         let doorsOpen = false;
-        let cameraMode = 0; // 0: Órbita, 1: Cabine, 2: Traseira
+        let cameraMode = 0;
 
         const throttleSlider = document.getElementById('throttle');
         const speedometer = document.getElementById('speedometer');
-        const statusBanner = document.getElementById('status-banner');
+        const powerVal = document.getElementById('power-val');
 
         throttleSlider.addEventListener('input', (e) => {
-            targetSpeed = (e.target.value / 100) * 0.0022;
+            const val = e.target.value;
+            targetSpeed = (val / 100) * 0.0022;
+            powerVal.textContent = val + "%";
             
             [somBuzina, somAndando, somAceleracao, somParado, somFreiando].forEach(s => {
                 if (s.paused) { s.play().catch(()=>{}); s.pause(); }
             });
         });
 
-        // Botão de Freio/Stop instantâneo
         document.getElementById('btnFreio').addEventListener('click', () => {
             targetSpeed = 0;
             throttleSlider.value = 0;
+            powerVal.textContent = "0%";
         });
 
         document.getElementById('btnBuzina').addEventListener('click', () => {
@@ -182,15 +190,14 @@
                 return;
             }
             doorsOpen = !doorsOpen;
-            btnPortas.textContent = doorsOpen ? "Portas: Abertas" : "Portas: Fechadas";
-            statusBanner.textContent = doorsOpen ? "Embarque em andamento" : "Pronto para partir";
+            btnPortas.style.background = doorsOpen ? "#ef4444" : "#f97316";
+            btnPortas.textContent = doorsOpen ? "Fechar" : "Portas";
         });
 
         document.getElementById('btnCamera').addEventListener('click', () => {
             cameraMode = (cameraMode + 1) % 3;
         });
 
-        // Gerenciamento de Áudio e Velocidade
         let prevSpeed = 0;
         function updateAudioStates(currentSpeed) {
             const accelDelta = currentSpeed - prevSpeed;
@@ -200,10 +207,8 @@
                 somAndando.pause();
                 somAceleracao.pause();
                 somFreiando.pause();
-                statusBanner.textContent = doorsOpen ? "Embarque em andamento" : "Parado";
             } else {
                 somParado.pause();
-                statusBanner.textContent = "Em movimento";
                 
                 if (accelDelta > 0.00003) {
                     if (somAceleracao.paused) {
@@ -224,7 +229,6 @@
             prevSpeed = currentSpeed;
         }
 
-        // Loop de Animação
         const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
@@ -232,9 +236,8 @@
             speed += (targetSpeed - speed) * 0.04;
             trainProgress = (trainProgress + speed) % 1;
 
-            // Atualizar Velocímetro na Tela (convertido para km/h fictício)
             const kmh = Math.round(speed * 90000);
-            speedometer.textContent = kmh + " km/h";
+            speedometer.innerHTML = kmh + '<br><span style="font-size: 11px; color: #94a3b8;">km/h</span>';
 
             updateAudioStates(speed);
 
@@ -243,32 +246,31 @@
 
             trainGroup.position.copy(point);
             trainGroup.lookAt(point.clone().add(tangent));
-            trainGroup.position.y += 1.2;
+            trainGroup.position.y -= 3.3;
 
             wagons.forEach((wagon, index) => {
-                const lag = (index + 1) * 0.018;
+                const lag = (index + 1) * 0.016;
                 const pWagon = path.getPoint((trainProgress - lag + 1) % 1);
                 wagon.position.copy(pWagon);
-                wagon.position.y += 1.2;
+                wagon.position.y -= 3.3;
                 wagon.lookAt(point);
             });
 
-            // Controle de Câmera dinâmico focado no trem
             if (cameraMode === 0) {
-                const time = clock.getElapsedTime() * 0.15;
-                camera.position.x = trainGroup.position.x + Math.cos(time) * 25;
-                camera.position.z = trainGroup.position.z + Math.sin(time) * 25;
-                camera.position.y = trainGroup.position.y + 12;
-                camera.lookAt(trainGroup.position);
+                const followPos = point.clone().sub(tangent.clone().multiplyScalar(16)).add(new THREE.Vector3(0, 4, 0));
+                camera.position.copy(followPos);
+                camera.lookAt(point);
             } else if (cameraMode === 1) {
-                const cabPos = point.clone().add(new THREE.Vector3(0, 1.8, 0));
+                const cabPos = point.clone().add(new THREE.Vector3(0, 1.2, 0));
                 camera.position.copy(cabPos);
                 const lookTarget = cabPos.clone().add(tangent.clone().multiplyScalar(10));
                 camera.lookAt(lookTarget);
             } else {
-                const followPos = point.clone().sub(tangent.clone().multiplyScalar(18)).add(new THREE.Vector3(0, 8, 0));
-                camera.position.copy(followPos);
-                camera.lookAt(point);
+                const time = clock.getElapsedTime() * 0.2;
+                camera.position.x = trainGroup.position.x + Math.cos(time) * 20;
+                camera.position.z = trainGroup.position.z + Math.sin(time) * 20;
+                camera.position.y = trainGroup.position.y + 10;
+                camera.lookAt(trainGroup.position);
             }
 
             renderer.render(scene, camera);
