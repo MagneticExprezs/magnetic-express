@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magnétic Express</title>
+  <style>
+    body, html {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      overflow: hidden; background-color: #0f172a; font-family: sans-serif;
+      user-select: none; -webkit-user-select: none;
+    }
+    #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+    
+    /* UI Overlay */
+    .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 16px; box-sizing: border-box; }
+    .interactive { pointer-events: auto; }
+    
+    .top-bar { display: flex; gap: 12px; align-items: center; }
+    .badge { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(8px); color: #fff; padding: 10px 18px; border-radius: 12px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    
+    .control-panel { background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(12px); border-radius: 20px; padding: 16px; display: flex; gap: 12px; align-items: center; justify-content: space-between; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    
+    .btn { background: #f97316; color: #fff; border: none; padding: 14px 20px; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 12px rgba(249,115,22,0.4); transition: transform 0.1s; }
+    .btn:active { transform: scale(0.95); }
+    .btn-red { background: #dc2626; box-shadow: 0 4px 12px rgba(220,38,38,0.4); }
+    
+    .throttle-container { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .throttle-label { color: #94a3b8; font-size: 0.75rem; font-weight: bold; text-align: center; }
+    .lever-track { position: relative; height: 38px; background: #1e293b; border-radius: 19px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; touch-action: none; }
+    .lever-fill { position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, #f97316, #fb923c); width: 0%; border-radius: 19px; }
+    .lever-handle { position: absolute; top: 3px; left: 0%; width: 32px; height: 32px; background: #fff; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.4); transform: translateX(-50%); transition: transform 0.05s; }
+    
+    .menu-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(16px); padding: 24px; border-radius: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 100; min-width: 260px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
+    .menu-modal.hidden { display: none; }
+    .cam-opt, .door-opt { background: #334155; color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; text-align: center; }
+    .door-opt.green { background: #16a34a; }
+    .door-opt.red { background: #dc2626; }
+  </style>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <div class="ui-layer">
+    <div class="top-bar">
+      <div id="speedometer" class="badge">0 km/h</div>
+      <div id="systemStatus" class="badge" style="font-size: 0.9rem; color: #fb923c;">PRONTO PARA PARTIDA</div>
+      <div style="margin-left: auto; display: flex; gap: 8px;">
+        <button id="btnCamera" class="btn interactive" style="padding: 10px 14px;">Câmera</button>
+        <button id="btnOpenDoorMenu" class="btn interactive" style="padding: 10px 14px;">Portas</button>
+      </div>
+    </div>
+
+    <div class="control-panel interactive">
+      <button id="btnHorn" class="btn">BUZINA</button>
+      <div class="throttle-container" id="leverTrack">
+        <div class="throttle-label">ACELERADOR / POTÊNCIA <span id="leverValText">0%</span></div>
+        <div class="lever-track">
+          <div id="leverFill" class="lever-fill"></div>
+          <div id="leverHandle" class="lever-handle"></div>
+        </div>
+      </div>
+      <button id="btnStop" class="btn btn-red">FREIO / STOP</button>
+    </div>
+  </div>
+
+  <!-- Menu de Câmeras -->
+  <div id="cameraMenu" class="menu-modal hidden interactive">
+    <div style="color: #fff; font-weight: bold; margin-bottom: 4px; text-align: center;">MODO DE CÂMERA</div>
+    <button class="cam-opt" data-cam="general">Órbita Geral</button>
+    <button class="cam-opt" data-cam="first">Cabine Frontal (Maquinista)</button>
+    <button class="cam-opt" data-cam="car0">Vagão 1 (Líder)</button>
+    <button class="cam-opt" data-cam="car2">Vagão 3 (Meio)</button>
+    <button id="btnCloseCameraMenu" class="btn" style="margin-top: 8px; background: #475569;">Fechar</button>
+  </div>
+
+  <!-- Menu de Portas -->
+  <div id="doorMenu" class="menu-modal hidden interactive">
+    <div style="color: #fff; font-weight: bold; margin-bottom: 4px; text-align: center;">CONTROLE DE PORTAS</div>
+    <button id="btnLeftDoor" class="door-opt green">PORTA ESQ: FECHADA</button>
+    <button id="btnRightDoor" class="door-opt green">PORTA DIR: FECHADA</button>
+    <button id="btnCloseDoorMenu" class="btn" style="margin-top: 8px; background: #475569;">Fechar</button>
+  </div>
+
+  <!-- Bibliotecas Three.js e OrbitControls via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+    // --- MOTOR DE ÁUDIO OFICIAL DO GITHUB ---
+    let audioCtx = null;
+    const sounds = {
+      horn: new Audio('Buzina do Trem.mp3'),
+      running: new Audio('Trem andando.mp3'),
+      departure: new Audio('Trem partindo.mp3'),
+      brake: new Audio('Trem chegando.mp3')
+    };
+
+    sounds.running.loop = true;
+    sounds.running.volume = 0.0;
+    Object.values(sounds).forEach(s => s.load());
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      Object.values(sounds).forEach(s => {
+        if (s.paused && s !== sounds.running) {
+          s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(e=>{});
+        }
+      });
+    }
+
+    function playSound(name) {
+      initAudio();
+      const s = sounds[name];
+      if (s) {
+        s.currentTime = 0;
+        s.play().catch(e => {});
+      }
+    }
+
+    function updateRunningSound(speedRatio) {
+      initAudio();
+      if (sounds.running.paused && speedRatio > 0.05) {
+        sounds.running.play().catch(e => {});
+      }
+      sounds.running.volume = speedRatio > 0.05 ? Math.min(1.0, speedRatio * 0.8) : 0.0;
+      if (speedRatio <= 0.01 && !sounds.running.paused) {
+        sounds.running.pause();
+      }
+    }
+
+    function playDoorDing() {
+      initAudio();
+      const now = audioCtx.currentTime;
+      [880, 659.25, 880].forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.22);
+        gain.gain.setValueAtTime(0.15, now + idx * 0.22);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.22 + 0.35);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.22);
+        osc.stop(now + idx * 0.22 + 0.35);
+      });
+    }
+
+    function playSparkShiii() {
+      initAudio();
+      const now = audioCtx.currentTime;
+      const bufferSize = audioCtx.sampleRate * 0.12;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 4000;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      noise.start(now);
+    }
+
+    // --- THREE.JS SCENE ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f172a);
+    scene.fog = new THREE.FogExp2(0x0f172a, 0.0035);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.maxDistance = 60;
+    controls.minDistance = 3;
+
+    scene.add(new THREE.AmbientLight(0xf1f5f9, 1.15));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+    dirLight.position.set(15, 25, 20);
+    scene.add(dirLight);
+
+    const tunnelLight1 = new THREE.PointLight(0xfffbeb, 1.3, 140);
+    tunnelLight1.position.set(0, 6, 0);
+    scene.add(tunnelLight1);
+
+    const matConcrete = new THREE.MeshLambertMaterial({ color: 0x64748b });
+    const matTunnelWall = new THREE.MeshLambertMaterial({ color: 0x475569, side: THREE.BackSide });
+    const matTunnelLight = new THREE.MeshBasicMaterial({ color: 0xfef9c3 });
+    const matRailSteel = new THREE.MeshPhongMaterial({ color: 0xcbd5e1, specular: 0xffffff, shininess: 80 });
+    const matFastener = new THREE.MeshLambertMaterial({ color: 0x1e293b });
+
+    const matTrainWhite = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    const matTrainOrange = new THREE.MeshLambertMaterial({ color: 0xf97316 });
+    const matChassisGray = new THREE.MeshLambertMaterial({ color: 0x334155 });
+    const matWheel = new THREE.MeshLambertMaterial({ color: 0x0f172a });
+    const matDoorSeal = new THREE.MeshLambertMaterial({ color: 0x111827 });
+    const matHeadlight = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+    const matCoupler = new THREE.MeshLambertMaterial({ color: 0x1e293b });
+    const matLeatherBlack = new THREE.MeshLambertMaterial({ color: 0x111827 });
+    const matLeatherTipGray = new THREE.MeshLambertMaterial({ color: 0x6b7280 });
+    const matSignBack = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const matTintedGlass = new THREE.MeshBasicMaterial({ color: 0x090d16, transparent: true, opacity: 0.88 });
+
+    const sparkCount = 3;
+    const sparkGeo = new THREE.BufferGeometry();
+    const sparkPositions = new Float32Array(sparkCount * 3);
+    for (let i = 0; i < sparkCount * 3; i++) sparkPositions[i] = -50;
+    sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPositions, 3));
+    const sparkMat = new THREE.PointsMaterial({ color: 0xfef08a, size: 0.45, transparent: true, opacity: 0 });
+    const sparkSystem = new THREE.Points(sparkGeo, sparkMat);
+    scene.add(sparkSystem);
+
+    const trackPoints = [];
+    const NUM_POINTS = 24;
+    const TRACK_RADIUS_X = 180;
+    const TRACK_RADIUS_Z = 260;
+
+    for (let i = 0; i < NUM_POINTS; i++) {
+      const angle = (i / NUM_POINTS) * Math.PI * 2;
+      const x = Math.sin(angle) * TRACK_RADIUS_X;
+      const z = Math.cos(angle) * TRACK_RADIUS_Z;
+      trackPoints.push(new THREE.Vector3(x, 0, z));
+    }
+    const trackCurve = new THREE.CatmullRomCurve3(trackPoints, true, 'catmullrom', 0.5);
+    const TOTAL_TRACK_LENGTH = trackCurve.getLength();
+
+    const tunnelTubeGeo = new THREE.TubeGeometry(trackCurve, 260, 7.5, 20, true);
+    const tunnelWallMesh = new THREE.Mesh(tunnelTubeGeo, matTunnelWall);
+    tunnelWallMesh.position.y = 3.5;
+    scene.add(tunnelWallMesh);
+
+    const SEGMENT_COUNT = 260;
+    const railLeftPoints = [];
+    const railRightPoints = [];
+    const magPoints = [];
+
+    for (let i = 0; i <= SEGMENT_COUNT; i++) {
+      const u = i / SEGMENT_COUNT;
+      const pt = trackCurve.getPointAt(u);
+      const tangent = trackCurve.getTangentAt(u).normalize();
+      const rightVec = new THREE.Vector3().crossVectors(tangent, new THREE.Vector3(0, 1, 0)).normalize();
+
+      railLeftPoints.push(pt.clone().addScaledVector(rightVec, -0.75).setY(0.09));
+      railRightPoints.push(pt.clone().addScaledVector(rightVec, 0.75).setY(0.09));
+      magPoints.push(pt.clone().setY(0.04));
+
+      if (i < SEGMENT_COUNT) {
+        const nextPt = trackCurve.getPointAt((i + 1) / SEGMENT_COUNT);
+        const midPt = pt.clone().add(nextPt).multiplyScalar(0.5);
+        const segLen = pt.distanceTo(nextPt) + 0.15;
+
+        const bedSeg = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.5, segLen), matConcrete);
+        bedSeg.position.set(midPt.x, -0.25, midPt.z);
+        bedSeg.lookAt(nextPt.x, -0.25, nextPt.z);
+        scene.add(bedSeg);
+
+        if (i % 4 === 0) {
+          const lampL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.15, 1.4), matTunnelLight);
+          const posL = midPt.clone().addScaledVector(rightVec, -4.6);
+          lampL.position.set(posL.x, 7.2, posL.z);
+          lampL.lookAt(nextPt.x - rightVec.x * 4.6, 7.2, nextPt.z - rightVec.z * 4.6);
+
+          const lampR = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.15, 1.4), matTunnelLight);
+          const posR = midPt.clone().addScaledVector(rightVec, 4.6);
+          lampR.position.set(posR.x, 7.2, posR.z);
+          lampR.lookAt(nextPt.x + rightVec.x * 4.6, 7.2, nextPt.z + rightVec.z * 4.6);
+
+          scene.add(lampL, lampR);
+        }
+      }
+    }
+
+    const railLeftCurve = new THREE.CatmullRomCurve3(railLeftPoints, true);
+    const railRightCurve = new THREE.CatmullRomCurve3(railRightPoints, true);
+    const magCurve = new THREE.CatmullRomCurve3(magPoints, true);
+
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(railLeftCurve, 260, 0.08, 6, true), matRailSteel));
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(railRightCurve, 260, 0.08, 6, true), matRailSteel));
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(magCurve, 260, 0.16, 6, true), matFastener));
+
+    const NUM_CARS = 5;
+    const CAR_LENGTH = 16;
+    const CAR_GAP = 0.9;
+    const CAR_WIDTH = 2.65;
+    const CAR_HEIGHT = 2.5;
+
+    let leftDoorOpen = false;
+    let rightDoorOpen = false;
+    let doorAnimRaw = 0;
+
+    function createDoorAssembly(sideSign, slideZ) {
+      const doorGroup = new THREE.Group();
+      const baseX = sideSign * (CAR_WIDTH / 2 + 0.015);
+      doorGroup.position.set(baseX, 1.8, slideZ);
+
+      const rubberLayer = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.02, 1.24), matDoorSeal);
+      doorGroup.add(rubberLayer);
+
+      const whiteDoor = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.92, 1.12), matTrainWhite);
+      whiteDoor.position.x = sideSign * 0.015;
+      doorGroup.add(whiteDoor);
+
+      const doorWindow = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.85, 0.78), matTintedGlass);
+      doorWindow.position.set(sideSign * 0.02, 0.35, 0);
+      doorGroup.add(doorWindow);
+
+      return doorGroup;
+    }
+
+    function createTrainCar(index, easedProgress) {
+      const car = new THREE.Group();
+      const isFront = index === 0;
+      const isBack = index === NUM_CARS - 1;
+
+      const chassis = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH - 0.1, 0.45, CAR_LENGTH), matChassisGray);
+      chassis.position.y = 0.55;
+      car.add(chassis);
+
+      const body = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH, CAR_HEIGHT, CAR_LENGTH), matTrainWhite);
+      body.position.y = 0.77 + CAR_HEIGHT / 2;
+      car.add(body);
+
+      const roofOrange = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH - 0.2, 0.12, CAR_LENGTH - 0.1), matTrainOrange);
+      roofOrange.position.y = 0.77 + CAR_HEIGHT + 0.08;
+      car.add(roofOrange);
+
+      const windowBand = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH + 0.02, 0.95, CAR_LENGTH - 0.2), matTintedGlass);
+      windowBand.position.y = 2.15;
+      car.add(windowBand);
+
+      [-4.8, 0, 4.8].forEach(doorZ => {
+        const slideOffset = easedProgress * 1.15;
+        const leftDoor = createDoorAssembly(-1, doorZ + (leftDoorOpen ? slideOffset : 0));
+        const rightDoor = createDoorAssembly(1, doorZ + (rightDoorOpen ? slideOffset : 0));
+        car.add(leftDoor, rightDoor);
+      });
+
+      const wheelGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.14, 14);
+      wheelGeo.rotateZ(Math.PI / 2);
+      [-5.8, -4.3, 4.3, 5.8].forEach(wz => {
+        [-0.75, 0.75].forEach(wx => {
+          const wheel = new THREE.Mesh(wheelGeo, matWheel);
+          wheel.position.set(wx, 0.32, wz);
+          car.add(wheel);
+        });
+      });
+
+      if (isFront) {
+        const frontPanel = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH + 0.02, CAR_HEIGHT, 0.15), matTrainOrange);
+        frontPanel.position.set(0, 0.77 + CAR_HEIGHT / 2, CAR_LENGTH / 2 + 0.02);
+        car.add(frontPanel);
+
+        const windshield = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH + 0.05, 0.95, 0.45), matTintedGlass);
+        windshield.position.set(0, 2.15, CAR_LENGTH / 2 - 0.05);
+        car.add(windshield);
+
+        [-0.9, 0.9].forEach(hx => {
+          const headlight = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.05), matHeadlight);
+          headlight.position.set(hx, 1.2, CAR_LENGTH / 2 + 0.09);
+          car.add(headlight);
+        });
+
+        const signBox = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.35, 0.05), matSignBack);
+        signBox.position.set(0, 2.75, CAR_LENGTH / 2 + 0.09);
+        car.add(signBox);
+
+        const signCanvas = document.createElement('canvas');
+        signCanvas.width = 512;
+        signCanvas.height = 128;
+        const signCtx = signCanvas.getContext('2d');
+        signCtx.fillStyle = '#000000';
+        signCtx.fillRect(0, 0, 512, 128);
+        signCtx.fillStyle = '#f97316';
+        signCtx.font = 'bold 34px sans-serif';
+        signCtx.textAlign = 'center';
+        signCtx.textBaseline = 'middle';
+        signCtx.fillText('Magnétic Express', 256, 64);
+        const signTexture = new THREE.CanvasTexture(signCanvas);
+        const signMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.3), new THREE.MeshBasicMaterial({ map: signTexture, transparent: true }));
+        signMesh.position.set(0, 2.75, CAR_LENGTH / 2 + 0.12);
+        car.add(signMesh);
+      }
+
+      if (isBack) {
+        const rearPanel = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH + 0.02, CAR_HEIGHT, 0.15), matTrainOrange);
+        rearPanel.position.set(0, 0.77 + CAR_HEIGHT / 2, -CAR_LENGTH / 2 - 0.02);
+        car.add(rearPanel);
+
+        const coupler = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.5), matCoupler);
+        coupler.position.set(0, 0.55, -CAR_LENGTH / 2 - 0.25);
+        car.add(coupler);
+      }
+
+      return car;
+    }
+
+    const carMeshes = [];
+    const bellowsMeshes = [];
+
+    function initTrainEntities() {
+      carMeshes.forEach(c => scene.remove(c));
+      bellowsMeshes.forEach(b => scene.remove(b));
+      carMeshes.length = 0;
+      bellowsMeshes.length = 0;
+
+      const eased = 1 - Math.pow(1 - doorAnimRaw, 3);
+
+      for (let i = 0; i < NUM_CARS; i++) {
+        const carMesh = createTrainCar(i, eased);
+        scene.add(carMesh);
+        carMeshes.push(carMesh);
+
+        if (i < NUM_CARS - 1) {
+          const bellowsGroup = new THREE.Group();
+          const layers = [];
+          for (let l = 0; l < 7; l++) {
+            const layerHolder = new THREE.Group();
+            const leather = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH - 0.22, CAR_HEIGHT - 0.38, 0.07), matLeatherBlack);
+            layerHolder.add(leather);
+
+            const tipGray = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH - 0.18, 0.06, 0.03), matLeatherTipGray);
+            tipGray.position.y = (CAR_HEIGHT - 0.38) / 2;
+            layerHolder.add(tipGray);
+
+            bellowsGroup.add(layerHolder);
+            layers.push(layerHolder);
+          }
+          bellowsGroup.userData.layers = layers;
+          scene.add(bellowsGroup);
+          bellowsMeshes.push(bellowsGroup);
+        }
+      }
+    }
+
+    initTrainEntities();
+
+    let distanceTraveled = 80;
+
+    function updateTrainTransform() {
+      for (let i = 0; i < NUM_CARS; i++) {
+        const carDist = (distanceTraveled - i * (CAR_LENGTH + CAR_GAP) + TOTAL_TRACK_LENGTH) % TOTAL_TRACK_LENGTH;
+        const u = carDist / TOTAL_TRACK_LENGTH;
+        const pos = trackCurve.getPointAt(u);
+        const tangent = trackCurve.getTangentAt(u).normalize();
+
+        const car = carMeshes[i];
+        car.position.copy(pos);
+        car.lookAt(pos.clone().add(tangent));
+      }
+
+      for (let i = 0; i < bellowsMeshes.length; i++) {
+        const frontCar = carMeshes[i];
+        const backCar = carMeshes[i + 1];
+
+        const frontDir = new THREE.Vector3(0, 0, 1).applyQuaternion(frontCar.quaternion);
+        const backDir = new THREE.Vector3(0, 0, 1).applyQuaternion(backCar.quaternion);
+
+        const rearAttach = frontCar.position.clone().addScaledVector(frontDir, -CAR_LENGTH / 2);
+        const frontAttach = backCar.position.clone().addScaledVector(backDir, CAR_LENGTH / 2);
+
+        const bellows = bellowsMeshes[i];
+        const layers = bellows.userData.layers;
+
+        for (let l = 0; l < layers.length; l++) {
+          const t = (l + 1) / (layers.length + 1);
+          const layerPos = new THREE.Vector3().lerpVectors(rearAttach, frontAttach, t);
+          layerPos.y = 1.8;
+
+          const layerHolder = layers[l];
+          layerHolder.position.copy(layerPos);
+          layerHolder.quaternion.slerpQuaternions(frontCar.quaternion, backCar.quaternion, t);
+        }
+      }
+    }
+
+    updateTrainTransform();
+
+    const initCarPos = carMeshes[0].position.clone();
+    camera.position.set(initCarPos.x + 8, 4.2, initCarPos.z + 12);
+    controls.target.copy(initCarPos).add(new THREE.Vector3(0, 1.8, 0));
+    controls.update();
+
+    let speed = 0;
+    let throttlePower = 0;
+    let stopMode = false;
+    let stopStartTime = 0;
+    let stopStartSpeed = 0;
+    let departureTriggered = false;
+
+    const MAX_SPEED = 4.0;
+    const ACCEL_DURATION = 8.0;
+    const BRAKE_DURATION = 20.0;
+
+    const speedometer = document.getElementById('speedometer');
+    const systemStatus = document.getElementById('systemStatus');
+    const leverTrack = document.getElementById('leverTrack');
+    const leverFill = document.getElementById('leverFill');
+    const leverHandle = document.getElementById('leverHandle');
+    const leverValText = document.getElementById('leverValText');
+
+    function updateLever(clientX) {
+      initAudio();
+      const rect = leverTrack.getBoundingClientRect();
+      let percent = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+
+      if (!leftDoorOpen && !rightDoorOpen && doorAnimRaw === 0) {
+        stopMode = false;
+        throttlePower = percent;
+        systemStatus.innerText = `POTÊNCIA: ${Math.round(throttlePower)}%`;
+      } else {
+        systemStatus.innerText = "FECHE AS PORTAS PRIMEIRO!";
+      }
+    }
+
+    leverTrack.addEventListener('touchstart', (e) => { if (e.touches.length > 0) updateLever(e.touches[0].clientX); }, { passive: true });
+    leverTrack.addEventListener('touchmove', (e) => { if (e.touches.length > 0) updateLever(e.touches[0].clientX); }, { passive: true });
+    leverTrack.addEventListener('mousedown', (e) => {
+      updateLever(e.clientX);
+      const onMove = (me) => updateLever(me.clientX);
+      const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    });
+
+    document.getElementById('btnStop').addEventListener('click', () => {
+      initAudio();
+      if (speed > 0.05 && !stopMode) {
+        stopMode = true;
+        stopStartTime = performance.now();
+        stopStartSpeed = speed;
+        playSound('brake');
+        systemStatus.innerText = "FREANDO (20s)...";
+      }
+    });
+
+    document.getElementById('btnHorn').addEventListener('click', () => playSound('horn'));
+
+    let currentCamMode = 'general';
+    document.querySelectorAll('.cam-opt').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        currentCamMode = e.target.getAttribute('data-cam');
+        document.getElementById('cameraMenu').classList.add('hidden');
+        controls.enabled = currentCamMode === 'general';
+      });
+    });
+
+    document.getElementById('btnCamera').addEventListener('click', () => document.getElementById('cameraMenu').classList.remove('hidden'));
+    document.getElementById('btnCloseCameraMenu').addEventListener('click', () => document.getElementById('cameraMenu').classList.add('hidden'));
+    document.getElementById('btnOpenDoorMenu').addEventListener('click', () => document.getElementById('doorMenu').classList.remove('hidden'));
+    document.getElementById('btnCloseDoorMenu').addEventListener('click', () => document.getElementById('doorMenu').classList.add('hidden'));
+
+    let doorTarget = 0;
+    document.getElementById('btnLeftDoor').addEventListener('click', () => {
+      initAudio();
+      if (speed > 0.05) { systemStatus.innerText = "PARE O TREM ANTES!"; return; }
+      leftDoorOpen = !leftDoorOpen;
+      doorTarget = (leftDoorOpen || rightDoorOpen) ? 1 : 0;
+      document.getElementById('btnLeftDoor').innerText = leftDoorOpen ? "PORTA ESQ: ABERTA" : "PORTA ESQ: FECHADA";
+      document.getElementById('btnLeftDoor').className = leftDoorOpen ? "door-opt red" : "door-opt green";
+      if (doorTarget === 0) playDoorDing();
+    });
+
+    document.getElementById('btnRightDoor').addEventListener('click', () => {
+      initAudio();
+      if (speed > 0.05) { systemStatus.innerText = "PARE O TREM ANTES!"; return; }
+      rightDoorOpen = !rightDoorOpen;
+      doorTarget = (leftDoorOpen || rightDoorOpen) ? 1 : 0;
+      document.getElementById('btnRightDoor').innerText = rightDoorOpen ? "PORTA DIR: ABERTA" : "PORTA DIR: FECHADA";
+      document.getElementById('btnRightDoor').className = rightDoorOpen ? "door-opt red" : "door-opt green";
+      if (doorTarget === 0) playDoorDing();
+    });
+
+    let lastFrontPos = carMeshes[0].position.clone();
+    let lastTime = performance.now();
+    let sparkTimer = 0;
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const delta = Math.min(0.1, (now - lastTime) / 1000);
+      lastTime = now;
+
+      if (doorTarget !== doorAnimRaw) {
+        const step = delta / 4.0;
+        if (doorTarget > doorAnimRaw) {
+          doorAnimRaw = Math.min(1, doorAnimRaw + step);
+        } else {
+          doorAnimRaw = Math.max(0, doorAnimRaw - step);
+        }
+        initTrainEntities();
+      }
+
+      const targetSpeed = (throttlePower / 100) * MAX_SPEED;
+
+      if (stopMode) {
+        const elapsedBrake = (now - stopStartTime) / 1000;
+        const brakeRatio = Math.min(1, elapsedBrake / BRAKE_DURATION);
+        speed = stopStartSpeed * (1 - brakeRatio);
+        throttlePower = (speed / MAX_SPEED) * 100;
+
+        if (brakeRatio >= 1 || speed <= 0.005) {
+          stopMode = false;
+          speed = 0;
+          throttlePower = 0;
+          departureTriggered = false;
+          systemStatus.innerText = "TREM PARADO";
+        }
+      } else if (leftDoorOpen || rightDoorOpen || doorAnimRaw > 0) {
+        speed = 0;
+        throttlePower = 0;
+      } else {
+        const accelRate = MAX_SPEED / ACCEL_DURATION;
+        if (speed < targetSpeed) {
+          if (speed === 0 && targetSpeed > 0.05 && !departureTriggered) {
+            playSound('departure');
+            departureTriggered = true;
+          }
+          speed = Math.min(targetSpeed, speed + accelRate * delta);
+        } else if (speed > targetSpeed) {
+          speed = Math.max(targetSpeed, speed - 0.05 * delta);
+        }
+        if (speed === 0) departureTriggered = false;
+      }
+
+      updateRunningSound(speed / MAX_SPEED);
+
+      leverFill.style.width = `${throttlePower}%`;
+      leverHandle.style.left = `${throttlePower}%`;
+      leverValText.innerText = `${Math.round(throttlePower)}%`;
+
+      distanceTraveled = (distanceTraveled + speed * 0.45) % TOTAL_TRACK_LENGTH;
+      updateTrainTransform();
+
+      const frontCar = carMeshes[0];
+      tunnelLight1.position.copy(frontCar.position).add(new THREE.Vector3(0, 6, 0));
+
+      speedometer.innerText = `${Math.round((speed / MAX_SPEED) * 200)} km/h`;
+
+      if (speed > 0.1) {
+        sparkTimer += delta;
+        const speedRatio = speed / MAX_SPEED;
+        const sparkIntervalTarget = 5.0 - (speedRatio * 2.0);
+
+        if (sparkTimer >= sparkIntervalTarget) {
+          sparkTimer = 0;
+          sparkMat.opacity = 0.95;
+          playSparkShiii();
+
+          const positions = sparkSystem.geometry.attributes.position.array;
+          const rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(frontCar.quaternion);
+
+          for (let i = 0; i < sparkCount; i++) {
+            const sideSign = (i % 2 === 0) ? 1.5 : -1.5;
+            const sparkPos = frontCar.position.clone().addScaledVector(rightVec, sideSign);
+            positions[i * 3] = sparkPos.x;
+            positions[i * 3 + 1] = 0.35 + (Math.random() * 0.1);
+            positions[i * 3 + 2] = sparkPos.z;
+          }
+          sparkSystem.geometry.attributes.position.needsUpdate = true;
+          setTimeout(() => { sparkMat.opacity = 0; }, 150);
+        }
+      } else {
+        sparkMat.opacity = 0;
+      }
+
+      const moveDelta = frontCar.position.clone().sub(lastFrontPos);
+      lastFrontPos.copy(frontCar.position);
+
+      if (currentCamMode === 'general') {
+        camera.position.add(moveDelta);
+        controls.target.add(moveDelta);
+        controls.update();
+      } else if (currentCamMode === 'first') {
+        const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(frontCar.quaternion);
+        camera.position.copy(frontCar.position).add(new THREE.Vector3(0, 2.15, 0)).addScaledVector(forward, CAR_LENGTH / 2 - 0.2);
+        camera.lookAt(camera.position.clone().addScaledVector(forward, 30));
+      } else if (currentCamMode.startsWith('car')) {
+        const idx = parseInt(currentCamMode.replace('car', '')) || 0;
+        const targetCar = carMeshes[idx] || frontCar;
+        const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(targetCar.quaternion);
+        camera.position.copy(targetCar.position).add(new THREE.Vector3(0, 1.85, 0));
+        camera.lookAt(camera.position.clone().addScaledVector(forward, 15));
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
