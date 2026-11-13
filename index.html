@@ -3,313 +3,906 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magnétic Express - Linha 1 (Laranja)</title>
+    <title>Magnétic Express</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #1e293b; font-family: sans-serif; user-select: none; }
-        
-        #top-panel {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            width: 92%; max-width: 520px; background: rgba(17, 24, 39, 0.92);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px;
-            padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7); color: white; backdrop-filter: blur(10px);
-        }
-        .header-title { font-size: 13px; font-weight: bold; color: #f97316; letter-spacing: 0.5px; }
-        .header-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; }
-        .header-speed { font-size: 22px; font-weight: bold; color: #facc15; text-align: right; }
-
-        #ui {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 92%; max-width: 520px; background: rgba(17, 24, 39, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
-            padding: 16px; display: flex; flex-direction: column; gap: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+          user-select: none;
+          -webkit-user-select: none;
         }
 
-        .btn-row { display: flex; gap: 10px; width: 100%; }
-        
-        #btnPortas { background: #ef4444; border: none; color: white; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer; flex: 1; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
-        #btnBuzina { background: #0284c7; border: none; color: white; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer; flex: 1; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4); }
-        #btnCamera { background: #4b5563; border: none; color: white; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer; flex: 1; box-shadow: 0 4px 12px rgba(75, 85, 99, 0.4); }
-
-        .throttle-box {
-            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 14px; padding: 10px 14px; display: flex; flex-direction: column; gap: 6px;
+        body, html {
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          background-color: #0f172a;
+          font-family: sans-serif;
         }
-        .throttle-header { display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; font-weight: bold; }
-        input[type=range] { width: 100%; accent-color: #ffffff; cursor: pointer; height: 8px; }
 
-        #btnStop {
-            background: #f97316; border: none; color: white; padding: 16px;
-            border-radius: 14px; font-weight: bold; font-size: 16px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4); text-align: center; letter-spacing: 1px;
+        #canvas-container {
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          top: 0;
+          left: 0;
+          z-index: 1;
         }
-        #btnStop:active { background: #c2410c; }
+
+        #hud {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 10;
+          pointer-events: none;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 20px;
+        }
+
+        #speedometer {
+          pointer-events: auto;
+          background: rgba(15, 23, 42, 0.85);
+          color: #f8fafc;
+          font-size: 28px;
+          font-weight: bold;
+          padding: 12px 24px;
+          border-radius: 12px;
+          border: 2px solid #334155;
+          width: max-content;
+        }
+
+        #systemStatus {
+          position: absolute;
+          top: 25px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(15, 23, 42, 0.9);
+          color: #38bdf8;
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-weight: bold;
+          font-size: 14px;
+          letter-spacing: 1px;
+          border: 1px solid #0284c7;
+        }
+
+        #top-menu-bar {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          display: flex;
+          gap: 10px;
+          pointer-events: auto;
+        }
+
+        .menu-btn {
+          background: #334155;
+          color: white;
+          border: none;
+          padding: 10px 16px;
+          border-radius: 8px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+
+        #controls-bar {
+          pointer-events: auto;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: rgba(15, 23, 42, 0.9);
+          padding: 15px 25px;
+          border-radius: 16px;
+          border: 1px solid #334155;
+          backdrop-filter: blur(8px);
+        }
+
+        .hud-btn {
+          padding: 18px 28px;
+          font-size: 16px;
+          font-weight: bold;
+          border: none;
+          border-radius: 12px;
+          cursor: pointer;
+          color: white;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .hud-btn.orange { background: #f97316; }
+        .hud-btn.red { background: #dc2626; }
+
+        #throttleContainer {
+          flex: 1;
+          max-width: 350px;
+          margin: 0 20px;
+          background: #1e293b;
+          padding: 12px;
+          border-radius: 10px;
+          border: 1px solid #475569;
+        }
+
+        #leverTrack {
+          position: relative;
+          width: 100%;
+          height: 24px;
+          background: #0f172a;
+          border-radius: 12px;
+          overflow: hidden;
+          cursor: pointer;
+          border: 1px solid #334155;
+        }
+
+        #leverFill {
+          position: absolute;
+          top: 0;
+          left: 0;
+          height: 100%;
+          width: 0%;
+          background: linear-gradient(90deg, #0284c7, #38bdf8);
+        }
+
+        #leverHandle {
+          position: absolute;
+          top: -2px;
+          left: 0%;
+          width: 28px;
+          height: 28px;
+          background: #ffffff;
+          border-radius: 50%;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+          transform: translateX(-50%);
+        }
+
+        #leverLabel {
+          color: #94a3b8;
+          font-size: 11px;
+          font-weight: bold;
+          text-align: center;
+          margin-top: 6px;
+        }
+
+        .modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.6);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 100;
+          pointer-events: auto;
+        }
+
+        .modal.hidden { display: none; }
+
+        .modal-content {
+          background: #1e293b;
+          padding: 25px;
+          border-radius: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          width: 280px;
+          border: 1px solid #475569;
+        }
+
+        .modal-content h3 { color: white; text-align: center; margin-bottom: 5px; }
+        .cam-opt, .door-opt { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
+        .cam-opt { background: #334155; }
+        .door-opt.green { background: #16a34a; }
+        .door-opt.red { background: #dc2626; }
+        .close-btn { background: #475569; color: white; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 5px; }
     </style>
 </head>
 <body>
-    <div id="top-panel">
-        <div>
-            <div class="header-title">MAGNÉTIC EXPRESS - LINHA 1 (LARANJA)</div>
-            <div class="header-sub" id="statusText">PARADO NO TÚNEL</div>
+    <div id="canvas-container"></div>
+
+    <div id="hud">
+      <div id="speedometer">0 km/h</div>
+      <div id="systemStatus">PRONTO PARA PARTIDA</div>
+      
+      <div id="controls-bar">
+        <button id="btnHorn" class="hud-btn orange">BUZINA</button>
+        
+        <div id="throttleContainer">
+          <div id="leverTrack">
+            <div id="leverFill"></div>
+            <div id="leverHandle"></div>
+          </div>
+          <div id="leverLabel">ACELERADOR / POTÊNCIA <span id="leverValText">0%</span></div>
         </div>
-        <div class="header-speed" id="speedometer">0 km/h</div>
+
+        <button id="btnStop" class="hud-btn red">FREIO / STOP</button>
+      </div>
+
+      <div id="top-menu-bar">
+        <button id="btnCamera" class="menu-btn">Câmera</button>
+        <button id="btnOpenDoorMenu" class="menu-btn">Portas</button>
+      </div>
     </div>
 
-    <div id="ui">
-        <div class="btn-row">
-            <button id="btnPortas">PORTAS</button>
-            <button id="btnBuzina">BUZINA</button>
-            <button id="btnCamera">CÂMERA</button>
-        </div>
-        <div class="throttle-box">
-            <div class="throttle-header">
-                <span>ALAVANCA DE POTÊNCIA</span>
-                <span id="power-val">0%</span>
-            </div>
-            <input type="range" id="throttle" min="0" max="100" value="0">
-        </div>
-        <button id="btnStop">STOP</button>
+    <!-- Menu de Câmeras -->
+    <div id="cameraMenu" class="modal hidden">
+      <div class="modal-content">
+        <h3>Selecionar Visão</h3>
+        <button class="cam-opt" data-cam="general">Visão Externa Livre</button>
+        <button class="cam-opt" data-cam="first">Cabine do Maquinista</button>
+        <button class="cam-opt" data-cam="car0">Vagão 1 (Frente)</button>
+        <button class="cam-opt" data-cam="car2">Vagão 3 (Meio)</button>
+        <button id="btnCloseCameraMenu" class="close-btn">Fechar</button>
+      </div>
+    </div>
+
+    <!-- Menu de Portas -->
+    <div id="doorMenu" class="modal hidden">
+      <div class="modal-content">
+        <h3>Controle de Portas</h3>
+        <button id="btnLeftDoor" class="door-opt green">PORTA ESQ: FECHADA</button>
+        <button id="btnRightDoor" class="door-opt green">PORTA DIR: FECHADA</button>
+        <button id="btnCloseDoorMenu" class="close-btn">Fechar</button>
+      </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
-        // Áudios do Repositório
-        const somBuzina = new Audio('buzina.mp3');
-        const somAndando = new Audio('andando.mp3');
-        const somAceleracao = new Audio('aceleracao.mp3');
-        const somParado = new Audio('parado.mp3');
-        const somFreiando = new Audio('freiando.mp3');
+        // --- MOTOR DE ÁUDIO PROCEDURAL E VENTO/ROLAMENTO ---
+        let audioCtx = null;
+        function initAudio() {
+          if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+          }
+          if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+          }
+        }
 
-        somAndando.loop = true;
-        somParado.loop = true;
+        let runningWindNode = null;
+        let runningWindGain = null;
+        function startRunningWind() {
+          if (runningWindNode) return;
+          try {
+            const bufferSize = audioCtx.sampleRate * 2;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+              data[i] = Math.random() * 2 - 1;
+            }
+            runningWindNode = audioCtx.createBufferSource();
+            runningWindNode.buffer = buffer;
+            runningWindNode.loop = true;
 
-        // Cena, Câmera e Renderizador
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 300;
+            filter.Q.value = 1.0;
+
+            runningWindGain = audioCtx.createGain();
+            runningWindGain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+
+            runningWindNode.connect(filter);
+            filter.connect(runningWindGain);
+            runningWindGain.connect(audioCtx.destination);
+            runningWindNode.start();
+          } catch (e) {}
+        }
+
+        function updateRunningWind(speedRatio) {
+          if (!audioCtx) return;
+          startRunningWind();
+          if (runningWindGain) {
+            const targetGain = speedRatio > 0.05 ? speedRatio * 0.18 : 0.001;
+            runningWindGain.gain.setTargetAtTime(targetGain, audioCtx.currentTime, 0.1);
+          }
+        }
+
+        function playHorn() {
+          initAudio();
+          const now = audioCtx.currentTime;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.linearRampToValueAtTime(310, now + 0.6);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.65);
+        }
+
+        function playDoorDing() {
+          initAudio();
+          const now = audioCtx.currentTime;
+          [880, 659.25, 880].forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.22);
+            gain.gain.setValueAtTime(0.15, now + idx * 0.22);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.22 + 0.35);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + idx * 0.22);
+            osc.stop(now + idx * 0.22 + 0.35);
+          });
+        }
+
+        function playDepartureSequence() {
+          initAudio();
+          const now = audioCtx.currentTime;
+          const osc1 = audioCtx.createOscillator();
+          const gain1 = audioCtx.createGain();
+          osc1.type = 'triangle';
+          osc1.frequency.setValueAtTime(440, now);
+          osc1.frequency.exponentialRampToValueAtTime(780, now + 2.1);
+          gain1.gain.setValueAtTime(0.25, now);
+          gain1.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
+          osc1.connect(gain1);
+          gain1.connect(audioCtx.destination);
+          osc1.start(now);
+          osc1.stop(now + 2.2);
+
+          const osc2 = audioCtx.createOscillator();
+          const gain2 = audioCtx.createGain();
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(320, now + 2.4);
+          osc2.frequency.exponentialRampToValueAtTime(580, now + 4.7);
+          gain2.gain.setValueAtTime(0.2, now + 2.4);
+          gain2.gain.exponentialRampToValueAtTime(0.001, now + 4.8);
+          osc2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          osc2.start(now + 2.4);
+          osc2.stop(now + 4.8);
+
+          const osc3 = audioCtx.createOscillator();
+          const gain3 = audioCtx.createGain();
+          osc3.type = 'sawtooth';
+          osc3.frequency.setValueAtTime(140, now + 5.0);
+          osc3.frequency.linearRampToValueAtTime(220, now + 7.8);
+          gain3.gain.setValueAtTime(0.22, now + 5.0);
+          gain3.gain.exponentialRampToValueAtTime(0.001, now + 8.0);
+          osc3.connect(gain3);
+          gain3.connect(audioCtx.destination);
+          osc3.start(now + 5.0);
+          osc3.stop(now + 8.0);
+        }
+
+        function playBrakeSequence() {
+          initAudio();
+          const now = audioCtx.currentTime;
+          const osc1 = audioCtx.createOscillator();
+          const gain1 = audioCtx.createGain();
+          osc1.type = 'sawtooth';
+          osc1.frequency.setValueAtTime(220, now);
+          osc1.frequency.linearRampToValueAtTime(130, now + 6.8);
+          gain1.gain.setValueAtTime(0.2, now);
+          gain1.gain.exponentialRampToValueAtTime(0.001, now + 7.0);
+          osc1.connect(gain1);
+          gain1.connect(audioCtx.destination);
+          osc1.start(now);
+          osc1.stop(now + 7.0);
+
+          const osc2 = audioCtx.createOscillator();
+          const gain2 = audioCtx.createGain();
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(560, now + 7.5);
+          osc2.frequency.exponentialRampToValueAtTime(300, now + 13.4);
+          gain2.gain.setValueAtTime(0.18, now + 7.5);
+          gain2.gain.exponentialRampToValueAtTime(0.001, now + 13.5);
+          osc2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          osc2.start(now + 7.5);
+          osc2.stop(now + 13.5);
+
+          const osc3 = audioCtx.createOscillator();
+          const gain3 = audioCtx.createGain();
+          osc3.type = 'triangle';
+          osc3.frequency.setValueAtTime(750, now + 14.0);
+          osc3.frequency.exponentialRampToValueAtTime(250, now + 19.8);
+          gain3.gain.setValueAtTime(0.18, now + 14.0);
+          gain3.gain.exponentialRampToValueAtTime(0.001, now + 20.0);
+          osc3.connect(gain3);
+          gain3.connect(audioCtx.destination);
+          osc3.start(now + 14.0);
+          osc3.stop(now + 20.0);
+        }
+
+        function playSparkShiii() {
+          initAudio();
+          const now = audioCtx.currentTime;
+          const bufferSize = audioCtx.sampleRate * 0.12;
+          const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+          }
+          const noise = audioCtx.createBufferSource();
+          noise.buffer = buffer;
+          const filter = audioCtx.createBiquadFilter();
+          filter.type = 'highpass';
+          filter.frequency.value = 4000;
+          const gain = audioCtx.createGain();
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(audioCtx.destination);
+          noise.start(now);
+        }
+
+        // --- THREE.JS SCENE ---
+        const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x1e293b);
-        scene.fog = new THREE.FogExp2(0x1e293b, 0.015);
+        scene.background = new THREE.Color(0x0f172a);
+        scene.fog = new THREE.FogExp2(0x0f172a, 0.0035);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        container.appendChild(renderer.domElement);
 
-        // Iluminação do Túnel
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-        scene.add(ambientLight);
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.maxDistance = 60;
+        controls.minDistance = 3;
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-        dirLight.position.set(20, 40, 20);
+        scene.add(new THREE.AmbientLight(0xf1f5f9, 1.15));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+        dirLight.position.set(15, 25, 20);
         scene.add(dirLight);
 
-        // Curva do Túnel e Trilho
-        class TunnelCurve extends THREE.Curve {
-            constructor(scale = 1) { super(); this.scale = scale; }
-            getPoint(t) {
-                const tx = Math.sin(t * Math.PI * 2) * 80;
-                const ty = 0;
-                const tz = Math.cos(t * Math.PI * 2) * 80;
-                return new THREE.Vector3(tx, ty, tz);
+        const tunnelLight1 = new THREE.PointLight(0xfffbeb, 1.3, 140);
+        tunnelLight1.position.set(0, 6, 0);
+        scene.add(tunnelLight1);
+
+        // Materiais
+        const matConcrete = new THREE.MeshLambertMaterial({ color: 0x64748b });
+        const matTunnelWall = new THREE.MeshLambertMaterial({ color: 0x475569, side: THREE.BackSide });
+        const matTunnelLight = new THREE.MeshBasicMaterial({ color: 0xfef9c3 });
+        const matRailSteel = new THREE.MeshPhongMaterial({ color: 0xcbd5e1, specular: 0xffffff, shininess: 80 });
+        const matFastener = new THREE.MeshLambertMaterial({ color: 0x1e293b });
+
+        const matTrainWhite = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        const matTrainOrange = new THREE.MeshLambertMaterial({ color: 0xf97316 });
+        const matChassisGray = new THREE.MeshLambertMaterial({ color: 0x334155 });
+        const matWheel = new THREE.MeshLambertMaterial({ color: 0x0f172a });
+        const matDoorSeal = new THREE.MeshLambertMaterial({ color: 0x111827 });
+        const matHeadlight = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+        const matCoupler = new THREE.MeshLambertMaterial({ color: 0x1e293b });
+        const matLeatherBlack = new THREE.MeshLambertMaterial({ color: 0x111827 });
+        const matLeatherTipGray = new THREE.MeshLambertMaterial({ color: 0x6b7280 });
+        const matSignBack = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const matTintedGlass = new THREE.MeshBasicMaterial({ color: 0x090d16, transparent: true, opacity: 0.88 });
+
+        // --- TRAÇADO DO TÚNEL E TRILHOS ---
+        const trackPoints = [];
+        const NUM_POINTS = 24;
+        const TRACK_RADIUS_X = 180;
+        const TRACK_RADIUS_Z = 260;
+
+        for (let i = 0; i < NUM_POINTS; i++) {
+          const angle = (i / NUM_POINTS) * Math.PI * 2;
+          const x = Math.sin(angle) * TRACK_RADIUS_X;
+          const z = Math.cos(angle) * TRACK_RADIUS_Z;
+          trackPoints.push(new THREE.Vector3(x, 0, z));
+        }
+        const trackCurve = new THREE.CatmullRomCurve3(trackPoints, true, 'catmullrom', 0.5);
+        const TOTAL_TRACK_LENGTH = trackCurve.getLength();
+
+        const tunnelTubeGeo = new THREE.TubeGeometry(trackCurve, 260, 7.5, 20, true);
+        const tunnelWallMesh = new THREE.Mesh(tunnelTubeGeo, matTunnelWall);
+        tunnelWallMesh.position.y = 3.5;
+        scene.add(tunnelWallMesh);
+
+        const SEGMENT_COUNT = 260;
+        const railLeftPoints = [];
+        const railRightPoints = [];
+        const magPoints = [];
+
+        for (let i = 0; i <= SEGMENT_COUNT; i++) {
+          const u = i / SEGMENT_COUNT;
+          const pt = trackCurve.getPointAt(u);
+          const tangent = trackCurve.getTangentAt(u).normalize();
+          const rightVec = new THREE.Vector3().crossVectors(tangent, new THREE.Vector3(0, 1, 0)).normalize();
+
+          railLeftPoints.push(pt.clone().addScaledVector(rightVec, -0.75).setY(0.09));
+          railRightPoints.push(pt.clone().addScaledVector(rightVec, 0.75).setY(0.09));
+          magPoints.push(pt.clone().setY(0.04));
+
+          if (i < SEGMENT_COUNT) {
+            const nextPt = trackCurve.getPointAt((i + 1) / SEGMENT_COUNT);
+            const midPt = pt.clone().add(nextPt).multiplyScalar(0.5);
+            const segLen = pt.distanceTo(nextPt) + 0.15;
+
+            const bedSeg = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.5, segLen), matConcrete);
+            bedSeg.position.set(midPt.x, -0.25, midPt.z);
+            bedSeg.lookAt(nextPt.x, -0.25, nextPt.z);
+            scene.add(bedSeg);
+
+            if (i % 4 === 0) {
+              const lampL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.15, 1.4), matTunnelLight);
+              const posL = midPt.clone().addScaledVector(rightVec, -4.6);
+              lampL.position.set(posL.x, 7.2, posL.z);
+              lampL.lookAt(nextPt.x - rightVec.x * 4.6, 7.2, nextPt.z - rightVec.z * 4.6);
+
+              const lampR = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.15, 1.4), matTunnelLight);
+              const posR = midPt.clone().addScaledVector(rightVec, 4.6);
+              lampR.position.set(posR.x, 7.2, posR.z);
+              lampR.lookAt(nextPt.x + rightVec.x * 4.6, 7.2, nextPt.z + rightVec.z * 4.6);
+
+              scene.add(lampL, lampR);
             }
+          }
         }
 
-        const path = new TunnelCurve();
-        
-        // Túnel Geometria
-        const tubeGeo = new THREE.TubeGeometry(path, 100, 6, 20, true);
-        const tubeMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.9, side: THREE.BackSide });
-        const tunnel = new THREE.Mesh(tubeGeo, tubeMat);
-        scene.add(tunnel);
+        const railLeftCurve = new THREE.CatmullRomCurve3(railLeftPoints, true);
+        const railRightCurve = new THREE.CatmullRomCurve3(railRightPoints, true);
+        const magCurve = new THREE.CatmullRomCurve3(magPoints, true);
 
-        // Luzes no teto do túnel
-        for (let i = 0; i < 20; i++) {
-            const lightGeo = new THREE.BoxGeometry(1.5, 0.2, 0.8);
-            const lightMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
-            const lightMesh = new THREE.Mesh(lightGeo, lightMat);
-            const pt = path.getPoint(i / 20);
-            lightMesh.position.set(pt.x, pt.y + 5.8, pt.z);
-            scene.add(lightMesh);
+        scene.add(new THREE.Mesh(new THREE.TubeGeometry(railLeftCurve, 260, 0.08, 6, true), matRailSteel));
+        scene.add(new THREE.Mesh(new THREE.TubeGeometry(railRightCurve, 260, 0.08, 6, true), matRailSteel));
+        scene.add(new THREE.Mesh(new THREE.TubeGeometry(magCurve, 260, 0.16, 6, true), matFastener));
+
+        // --- TREM E SANFONAS ---
+        const NUM_CARS = 5;
+        const CAR_LENGTH = 16;
+        const CAR_GAP = 0.9;
+        const CAR_WIDTH = 2.65;
+        const CAR_HEIGHT = 2.5;
+
+        let leftDoorOpen = false;
+        let rightDoorOpen = false;
+        let doorAnimRaw = 0;
+
+        function createDoorAssembly(sideSign, slideZ) {
+          const doorGroup = new THREE.Group();
+          const baseX = sideSign * (CAR_WIDTH / 2 + 0.015);
+          doorGroup.position.set(baseX, 1.8, slideZ);
+
+          const rubberLayer = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.02, 1.24), matDoorSeal);
+          doorGroup.add(rubberLayer);
+
+          const whiteDoor = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.92, 1.12), matTrainWhite);
+          whiteDoor.position.x = sideSign * 0.015;
+          doorGroup.add(whiteDoor);
+
+          const doorWindow = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.85, 0.78), matTintedGlass);
+          doorWindow.position.set(sideSign * 0.02, 0.35, 0);
+          doorGroup.add(doorWindow);
+
+          return doorGroup;
         }
 
-        // Criar o Comboio Articulado Real (Laranja e Branco com Faixa Preta)
-        const trainGroup = new THREE.Group();
+        function createTrainCar(index, easedProgress) {
+          const car = new THREE.Group();
+          const isFront = index === 0;
+          const isBack = index === NUM_CARS - 1;
 
-        // Função para criar um vagão detalhado idêntico aos prints
-        function createTrainCar(isLocomotive = false) {
-            const car = new THREE.Group();
-            
-            // Corpo principal branco/cinza claro
-            const bodyGeo = new THREE.BoxGeometry(2.2, 2.2, 5.0);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            car.add(body);
+          const chassis = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH - 0.1, 0.45, CAR_LENGTH), matChassisGray);
+          chassis.position.y = 0.55;
+          car.add(chassis);
 
-            // Frente Laranja (se for a locomotiva)
-            if (isLocomotive) {
-                const noseGeo = new THREE.BoxGeometry(2.2, 2.2, 1.5);
-                const noseMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.3 });
-                const nose = new THREE.Mesh(noseGeo, noseMat);
-                nose.position.set(0, 0, 2.0);
-                car.add(nose);
+          const body = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH, CAR_HEIGHT, CAR_LENGTH), matTrainWhite);
+          body.position.y = 0.77 + CAR_HEIGHT / 2;
+          car.add(body);
 
-                // Vidro frontal escuro da cabine
-                const glassGeo = new THREE.BoxGeometry(2.0, 0.9, 0.2);
-                const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1 });
-                const glass = new THREE.Mesh(glassGeo, glassMat);
-                glass.position.set(0, 0.3, 2.76);
-                car.add(glass);
+          const roofOrange = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH - 0.2, 0.12, CAR_LENGTH - 0.1), matTrainOrange);
+          roofOrange.position.y = 0.77 + CAR_HEIGHT + 0.08;
+          car.add(roofOrange);
 
-                // Faróis
-                const lightGeo = new THREE.BoxGeometry(0.3, 0.2, 0.1);
-                const lightMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
-                const l1 = new THREE.Mesh(lightGeo, lightMat); l1.position.set(-0.7, -0.4, 2.8);
-                const l2 = new THREE.Mesh(lightGeo, lightMat); l2.position.set(0.7, -0.4, 2.8);
-                car.add(l1); car.add(l2);
-            }
+          const windowBand = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH + 0.02, 0.95, CAR_LENGTH - 0.2), matTintedGlass);
+          windowBand.position.y = 2.15;
+          car.add(windowBand);
 
-            // Faixa lateral preta com portas e janelas (característica dos prints)
-            const stripeGeo = new THREE.BoxGeometry(2.24, 1.1, 4.8);
-            const stripeMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
-            const stripe = new THREE.Mesh(stripeGeo, stripeMat);
-            car.add(stripe);
+          [-4.8, 0, 4.8].forEach(doorZ => {
+            const slideOffset = easedProgress * 1.15;
+            const leftDoor = createDoorAssembly(-1, doorZ + (leftDoorOpen ? slideOffset : 0));
+            const rightDoor = createDoorAssembly(1, doorZ + (rightDoorOpen ? slideOffset : 0));
+            car.add(leftDoor, rightDoor);
+          });
 
-            return car;
-        }
-
-        // Montar a composição (Locomotiva + Vagões)
-        const cars = [];
-        const numCars = 5;
-        for (let i = 0; i < numCars; i++) {
-            const car = createTrainCar(i === 0);
-            scene.add(car);
-            cars.push(car);
-        }
-
-        // Controlo do Simulador
-        let trainProgress = 0;
-        let speed = 0;
-        let targetSpeed = 0;
-        let doorsOpen = false;
-        let cameraMode = 0;
-
-        const throttleSlider = document.getElementById('throttle');
-        const speedometer = document.getElementById('speedometer');
-        const powerVal = document.getElementById('power-val');
-        const statusText = document.getElementById('statusText');
-
-        throttleSlider.addEventListener('input', (e) => {
-            const val = e.target.value;
-            targetSpeed = (val / 100) * 0.0015;
-            powerVal.textContent = val + "%";
-            statusText.textContent = val > 0 ? "EM MOVIMENTO" : "PARADO NO TÚNEL";
-            
-            [somBuzina, somAndando, somAceleracao, somParado, somFreiando].forEach(s => {
-                if (s.paused) { s.play().catch(()=>{}); s.pause(); }
+          const wheelGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.14, 14);
+          wheelGeo.rotateZ(Math.PI / 2);
+          [-5.8, -4.3, 4.3, 5.8].forEach(wz => {
+            [-0.75, 0.75].forEach(wx => {
+              const wheel = new THREE.Mesh(wheelGeo, matWheel);
+              wheel.position.set(wx, 0.32, wz);
+              car.add(wheel);
             });
+          });
+
+          if (isFront) {
+            const frontPanel = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH + 0.02, CAR_HEIGHT, 0.15), matTrainOrange);
+            frontPanel.position.set(0, 0.77 + CAR_HEIGHT / 2, CAR_LENGTH / 2 + 0.02);
+            car.add(frontPanel);
+
+            const windshield = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH + 0.05, 0.95, 0.45), matTintedGlass);
+            windshield.position.set(0, 2.15, CAR_LENGTH / 2 - 0.05);
+            car.add(windshield);
+
+            [-0.9, 0.9].forEach(hx => {
+              const headlight = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.05), matHeadlight);
+              headlight.position.set(hx, 1.2, CAR_LENGTH / 2 + 0.09);
+              car.add(headlight);
+            });
+
+            const signBox = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.35, 0.05), matSignBack);
+            signBox.position.set(0, 2.75, CAR_LENGTH / 2 + 0.09);
+            car.add(signBox);
+
+            const signCanvas = document.createElement('canvas');
+            signCanvas.width = 512;
+            signCanvas.height = 128;
+            const signCtx = signCanvas.getContext('2d');
+            signCtx.fillStyle = '#000000';
+            signCtx.fillRect(0, 0, 512, 128);
+            signCtx.fillStyle = '#f97316';
+            signCtx.font = 'bold 34px sans-serif';
+            signCtx.textAlign = 'center';
+            signCtx.textBaseline = 'middle';
+            signCtx.fillText('Magnétic Express', 256, 64);
+            const signTexture = new THREE.CanvasTexture(signCanvas);
+            const signMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.3), new THREE.MeshBasicMaterial({ map: signTexture, transparent: true }));
+            signMesh.position.set(0, 2.75, CAR_LENGTH / 2 + 0.12);
+            car.add(signMesh);
+          }
+
+          if (isBack) {
+            const rearPanel = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH + 0.02, CAR_HEIGHT, 0.15), matTrainOrange);
+            rearPanel.position.set(0, 0.77 + CAR_HEIGHT / 2, -CAR_LENGTH / 2 - 0.02);
+            car.add(rearPanel);
+
+            const coupler = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.5), matCoupler);
+            coupler.position.set(0, 0.55, -CAR_LENGTH / 2 - 0.25);
+            car.add(coupler);
+          }
+
+          return car;
+        }
+
+        const carMeshes = [];
+        const bellowsMeshes = [];
+
+        function initTrainEntities() {
+          carMeshes.forEach(c => scene.remove(c));
+          bellowsMeshes.forEach(b => scene.remove(b));
+          carMeshes.length = 0;
+          bellowsMeshes.length = 0;
+
+          const eased = 1 - Math.pow(1 - doorAnimRaw, 3);
+
+          for (let i = 0; i < NUM_CARS; i++) {
+            const carMesh = createTrainCar(i, eased);
+            scene.add(carMesh);
+            carMeshes.push(carMesh);
+
+            if (i < NUM_CARS - 1) {
+              const bellowsGroup = new THREE.Group();
+              const layers = [];
+              for (let l = 0; l < 7; l++) {
+                const layerHolder = new THREE.Group();
+                const leather = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH - 0.22, CAR_HEIGHT - 0.38, 0.07), matLeatherBlack);
+                layerHolder.add(leather);
+
+                const tipGray = new THREE.Mesh(new THREE.BoxGeometry(CAR_WIDTH - 0.18, 0.06, 0.03), matLeatherTipGray);
+                tipGray.position.y = (CAR_HEIGHT - 0.38) / 2;
+                layerHolder.add(tipGray);
+
+                bellowsGroup.add(layerHolder);
+                layers.push(layerHolder);
+              }
+              bellowsGroup.userData.layers = layers;
+              scene.add(bellowsGroup);
+              bellowsMeshes.push(bellowsGroup);
+            }
+          }
+        }
+
+        initTrainEntities();
+
+        let distanceTraveled = 80;
+
+        function updateTrainTransform() {
+          for (let i = 0; i < NUM_CARS; i++) {
+            const carDist = (distanceTraveled - i * (CAR_LENGTH + CAR_GAP) + TOTAL_TRACK_LENGTH) % TOTAL_TRACK_LENGTH;
+            const u = carDist / TOTAL_TRACK_LENGTH;
+            const pos = trackCurve.getPointAt(u);
+            const tangent = trackCurve.getTangentAt(u).normalize();
+
+            const car = carMeshes[i];
+            car.position.copy(pos);
+            car.lookAt(pos.clone().add(tangent));
+          }
+
+          for (let i = 0; i < bellowsMeshes.length; i++) {
+            const frontCar = carMeshes[i];
+            const backCar = carMeshes[i + 1];
+
+            const frontDir = new THREE.Vector3(0, 0, 1).applyQuaternion(frontCar.quaternion);
+            const backDir = new THREE.Vector3(0, 0, 1).applyQuaternion(backCar.quaternion);
+
+            const rearAttach = frontCar.position.clone().addScaledVector(frontDir, -CAR_LENGTH / 2);
+            const frontAttach = backCar.position.clone().addScaledVector(backDir, CAR_LENGTH / 2);
+
+            const bellows = bellowsMeshes[i];
+            const layers = bellows.userData.layers;
+
+            for (let l = 0; l < layers.length; l++) {
+              const t = (l + 1) / (layers.length + 1);
+              const layerPos = new THREE.Vector3().lerpVectors(rearAttach, frontAttach, t);
+              const layer = layers[l];
+              layer.position.copy(layerPos);
+              layer.lookAt(frontAttach);
+            }
+          }
+        }
+
+        let targetSpeed = 0;
+        let currentSpeed = 0;
+        let throttlePercent = 0;
+        let isDraggingLever = false;
+
+        const leverTrack = document.getElementById('leverTrack');
+        const leverFill = document.getElementById('leverFill');
+        const leverHandle = document.getElementById('leverHandle');
+        const leverValText = document.getElementById('leverValText');
+        const speedometer = document.getElementById('speedometer');
+        const systemStatus = document.getElementById('systemStatus');
+
+        function setThrottle(pct) {
+          throttlePercent = Math.max(0, Math.min(100, pct));
+          targetSpeed = (throttlePercent / 100) * 0.9;
+          leverFill.style.width = throttlePercent + '%';
+          leverHandle.style.left = throttlePercent + '%';
+          leverValText.textContent = Math.round(throttlePercent) + '%';
+        }
+
+        leverTrack.addEventListener('pointerdown', (e) => {
+          isDraggingLever = true;
+          initAudio();
+          updateLeverFromPointer(e);
         });
+        window.addEventListener('pointermove', (e) => {
+          if (isDraggingLever) updateLeverFromPointer(e);
+        });
+        window.addEventListener('pointerup', () => {
+          isDraggingLever = false;
+        });
+
+        function updateLeverFromPointer(e) {
+          const rect = leverTrack.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const pct = (x / rect.width) * 100;
+          setThrottle(pct);
+          if (throttlePercent > 0 && currentSpeed < 0.1) {
+            playDepartureSequence();
+            systemStatus.textContent = "EM PARTIDA...";
+          }
+        }
 
         document.getElementById('btnStop').addEventListener('click', () => {
-            targetSpeed = 0;
-            throttleSlider.value = 0;
-            powerVal.textContent = "0%";
-            statusText.textContent = "PARADO NO TÚNEL";
+          setThrottle(0);
+          playBrakeSequence();
+          systemStatus.textContent = "FREADA DE EMERGÊNCIA";
         });
 
-        document.getElementById('btnBuzina').addEventListener('click', () => {
-            somBuzina.currentTime = 0;
-            somBuzina.play().catch(()=>{});
+        document.getElementById('btnHorn').addEventListener('click', () => {
+          playHorn();
         });
 
-        const btnPortas = document.getElementById('btnPortas');
-        btnPortas.addEventListener('click', () => {
-            if (speed > 0.0002) {
-                alert("Pare o trem totalmente para abrir as portas!");
-                return;
-            }
-            doorsOpen = !doorsOpen;
-            btnPortas.style.background = doorsOpen ? "#16a34a" : "#ef4444";
-            statusText.textContent = doorsOpen ? "PORTAS ABERTAS" : "PARADO NO TÚNEL";
+        const cameraMenu = document.getElementById('cameraMenu');
+        const doorMenu = document.getElementById('doorMenu');
+
+        document.getElementById('btnCamera').addEventListener('click', () => cameraMenu.classList.remove('hidden'));
+        document.getElementById('btnCloseCameraMenu').addEventListener('click', () => cameraMenu.classList.add('hidden'));
+
+        document.getElementById('btnOpenDoorMenu').addEventListener('click', () => doorMenu.classList.remove('hidden'));
+        document.getElementById('btnCloseDoorMenu').addEventListener('click', () => doorMenu.classList.add('hidden'));
+
+        let currentCameraMode = 'general';
+        document.querySelectorAll('.cam-opt').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            currentCameraMode = e.target.getAttribute('data-cam');
+            cameraMenu.classList.add('hidden');
+          });
         });
 
-        document.getElementById('btnCamera').addEventListener('click', () => {
-            cameraMode = (cameraMode + 1) % 3;
+        const btnLeftDoor = document.getElementById('btnLeftDoor');
+        const btnRightDoor = document.getElementById('btnRightDoor');
+
+        btnLeftDoor.addEventListener('click', () => {
+          if (currentSpeed > 0.05) {
+            alert("Pare o trem totalmente para operar as portas!");
+            return;
+          }
+          leftDoorOpen = !leftDoorOpen;
+          playDoorDing();
+          btnLeftDoor.textContent = `PORTA ESQ: ${leftDoorOpen ? 'ABERTA' : 'FECHADA'}`;
+          btnLeftDoor.className = `door-opt ${leftDoorOpen ? 'red' : 'green'}`;
+          systemStatus.textContent = leftDoorOpen || rightDoorOpen ? "PORTAS ABERTAS" : "PRONTO PARA PARTIDA";
+          initTrainEntities();
         });
 
-        let prevSpeed = 0;
-        function updateAudioStates(currentSpeed) {
-            const accelDelta = currentSpeed - prevSpeed;
-            if (currentSpeed < 0.0001) {
-                if (somParado.paused) somParado.play().catch(()=>{});
-                somAndando.pause(); somAceleracao.pause(); somFreiando.pause();
-            } else {
-                somParado.pause();
-                if (accelDelta > 0.00002) {
-                    if (somAceleracao.paused) { somAceleracao.currentTime = 0; somAceleracao.play().catch(()=>{}); }
-                    somFreiando.pause();
-                } else if (accelDelta < -0.00002) {
-                    if (somFreiando.paused) { somFreiando.currentTime = 0; somFreiando.play().catch(()=>{}); }
-                    somAceleracao.pause();
-                }
-                if (somAndando.paused) somAndando.play().catch(()=>{});
-            }
-            prevSpeed = currentSpeed;
-        }
+        btnRightDoor.addEventListener('click', () => {
+          if (currentSpeed > 0.05) {
+            alert("Pare o trem totalmente para operar as portas!");
+            return;
+          }
+          rightDoorOpen = !rightDoorOpen;
+          playDoorDing();
+          btnRightDoor.textContent = `PORTA DIR: ${rightDoorOpen ? 'ABERTA' : 'FECHADA'}`;
+          btnRightDoor.className = `door-opt ${rightDoorOpen ? 'red' : 'green'}`;
+          systemStatus.textContent = leftDoorOpen || rightDoorOpen ? "PORTAS ABERTAS" : "PRONTO PARA PARTIDA";
+          initTrainEntities();
+        });
 
-        // Loop de Animação ao longo da Curva
         const clock = new THREE.Clock();
         function animate() {
-            requestAnimationFrame(animate);
+          requestAnimationFrame(animate);
 
-            speed += (targetSpeed - speed) * 0.04;
-            trainProgress = (trainProgress + speed) % 1;
+          currentSpeed += (targetSpeed - currentSpeed) * 0.03;
+          distanceTraveled = (distanceTraveled + currentSpeed) % TOTAL_TRACK_LENGTH;
 
-            const kmh = Math.round((speed / 0.0015) * 160);
-            speedometer.textContent = kmh + " km/h";
+          updateTrainTransform();
 
-            updateAudioStates(speed);
+          const kmh = Math.round(currentSpeed * 200);
+          speedometer.textContent = kmh + ' km/h';
 
-            // Posicionar cada vagão na curva do trilho
-            cars.forEach((car, index) => {
-                const offset = index * 0.012;
-                const pPos = (trainProgress - offset + 1) % 1;
-                const point = path.getPoint(pPos);
-                const tangente = path.getTangent(pPos);
+          updateRunningWind(currentSpeed / 0.9);
 
-                car.position.copy(point);
-                car.lookAt(point.clone().add(tangente));
-            });
+          if (currentSpeed > 0.3 && Math.random() < 0.08) {
+            playSparkShiii();
+          }
 
-            // Câmeras dinâmicas
-            const locoPoint = path.getPoint(trainProgress);
-            const locoTangent = path.getTangent(trainProgress);
+          const frontCar = carMeshes[0];
+          const frontPos = frontCar.position.clone();
+          const frontQuat = frontCar.quaternion;
+          const trainForward = new THREE.Vector3(0, 0, 1).applyQuaternion(frontQuat);
 
-            if (cameraMode === 0) {
-                // Traseira externa
-                const camPos = locoPoint.clone().sub(locoTangent.clone().multiplyScalar(12)).add(new THREE.Vector3(0, 4, 0));
-                camera.position.copy(camPos);
-                camera.lookAt(locoPoint);
-            } else if (cameraMode === 1) {
-                // Visão da Cabine / Frente
-                const cabPos = locoPoint.clone().add(locoTangent.clone().multiplyScalar(1.5)).add(new THREE.Vector3(0, 1.2, 0));
-                camera.position.copy(cabPos);
-                const lookTarget = cabPos.clone().add(locoTangent.clone().multiplyScalar(20));
-                camera.lookAt(lookTarget);
-            } else {
-                // Orbital panorâmica
-                const time = clock.getElapsedTime() * 0.4;
-                camera.position.set(locoPoint.x + Math.cos(time) * 20, locoPoint.y + 10, locoPoint.z + Math.sin(time) * 20);
-                camera.lookAt(locoPoint);
-            }
+          if (currentCameraMode === 'general') {
+            controls.enabled = true;
+            controls.target.copy(frontPos);
+          } else if (currentCameraMode === 'first') {
+            controls.enabled = false;
+            camera.position.copy(frontPos.clone().add(new THREE.Vector3(0, 1.3, 2)));
+            camera.lookAt(frontPos.clone().add(trainForward.clone().multiplyScalar(30)));
+          } else if (currentCameraMode === 'car0') {
+            controls.enabled = false;
+            const car = carMeshes[0];
+            camera.position.copy(car.position.clone().add(new THREE.Vector3(0, 6, -10)));
+            camera.lookAt(car.position);
+          } else if (currentCameraMode === 'car2') {
+            controls.enabled = false;
+            const car = carMeshes[2];
+            camera.position.copy(car.position.clone().add(new THREE.Vector3(0, 8, -12)));
+            camera.lookAt(car.position);
+          }
 
-            renderer.render(scene, camera);
+          if (currentCameraMode === 'general') {
+            controls.update();
+          }
+
+          renderer.render(scene, camera);
         }
 
         animate();
 
         window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
         });
     </script>
 </body>
