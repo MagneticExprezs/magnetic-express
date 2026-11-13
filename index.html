@@ -127,7 +127,7 @@
         const trackMesh = new THREE.Mesh(tubeGeometry, trackMaterial);
         scene.add(trackMesh);
 
-        // Modelo do Trem Detalhado (Locomotiva + Vagões Modernos)
+        // Modelo do Trem Articulado
         const trainGroup = new THREE.Group();
         
         const locoGeo = new THREE.BoxGeometry(2.1, 2.1, 4.2);
@@ -150,7 +150,7 @@
         let speed = 0;
         let targetSpeed = 0;
         let doorsOpen = false;
-        let cameraMode = 0; // 0: Órbita, 1: Cabine, 2: Traseira
+        let cameraMode = 0;
 
         const throttleSlider = document.getElementById('throttle');
         const speedometer = document.getElementById('speedometer');
@@ -164,7 +164,6 @@
             });
         });
 
-        // Botão de Freio/Stop instantâneo
         document.getElementById('btnFreio').addEventListener('click', () => {
             targetSpeed = 0;
             throttleSlider.value = 0;
@@ -232,7 +231,6 @@
             speed += (targetSpeed - speed) * 0.04;
             trainProgress = (trainProgress + speed) % 1;
 
-            // Atualizar Velocímetro na Tela (convertido para km/h fictício)
             const kmh = Math.round(speed * 90000);
             speedometer.textContent = kmh + " km/h";
 
@@ -253,7 +251,6 @@
                 wagon.lookAt(point);
             });
 
-            // Controle de Câmera dinâmico focado no trem
             if (cameraMode === 0) {
                 const time = clock.getElapsedTime() * 0.15;
                 camera.position.x = trainGroup.position.x + Math.cos(time) * 25;
